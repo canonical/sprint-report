@@ -23,8 +23,8 @@ Example:
 $> sprint-report FR "2023 Pulse #1"
 ```
 
-To install this tool:
+Before installing this tool, ensure that you have installed the Jira pip
+package:
 ```
-$> sudo python3 setup.py install
 $> pip install jira
 ```
