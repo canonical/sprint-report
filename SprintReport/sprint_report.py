@@ -103,7 +103,7 @@ def main(args=None):
     )
 
     parser.add_argument("project", type=str, help="key of the Jira project")
-    parser.add_argument("sprint", type=str, help="name os the Jira sprint")
+    parser.add_argument("sprint", type=str, help="name of the Jira sprint")
 
     opts = parser.parse_args(args)
 
