@@ -1,5 +1,6 @@
 import argparse
 import re
+import sys
 
 from jira import JIRA, JIRAError
 from SprintReport.jira_api import jira_api
@@ -109,8 +110,9 @@ def main(args=None):
 
     try:
         api = jira_api()
-    except ValueError:
-        return "ERROR: Cannot initialize Jira API"
+    except ValueError as e:
+        print(f"ERROR: Cannot initialize Jira API: {e}", file=sys.stderr)
+        sys.exit(1)
 
     jira_server = api.server
 
