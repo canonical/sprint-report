@@ -89,9 +89,9 @@ def print_jira_report(issues):
     category = ""
     print("# {} report".format(sprint))
     for issue in issues:
-        if issues[issue]["type"] != category:
-            category = issues[issue]["type"]
-            print("\n## {}".format(category))
+#        if issues[issue]["type"] != category:
+#            category = issues[issue]["type"]
+#            print("\n## {}".format(category))
         print_jira_issue(issues[issue])
 
 
