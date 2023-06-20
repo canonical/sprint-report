@@ -31,11 +31,12 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
 
     found_issues = {}
 
+    sprint_goal = ""
     while True:
         start_index = issue_index * issue_batch
         request = "project = {} " \
             "AND sprint = \"{}\" " \
-            "AND status = Done ORDER BY type".format(project, sprint)
+            "AND status = Done AND issueType != Sub-task ORDER BY \'Epic Link\'".format(project, sprint)
         issues = jira_api.search_issues(request, startAt=start_index)
 
         if not issues:
@@ -45,13 +46,21 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
 
         # For each issue in JIRA with LP# in the title
         for issue in issues:
+            sprint_goal = issue.fields.customfield_10020[0].goal
             summary = issue.fields.summary
             issue_type = issue.fields.issuetype.name
+            if hasattr(issue.fields, "parent"):
+                epic = jira_api.issue(issue.fields.parent.key)
+                epic_summary = epic.fields.summary
+            else:
+                epic_summary = "Other"
             found_issues[issue.key]= {
                 "key":issue.key,
                 "type":issue_type,
+                "epic":epic_summary,
                 "summary":summary}
 
+    print("\nPulse Goal:\n{}\n\n---\nTasks:\n".format(sprint_goal))
     return found_issues
 
 
@@ -76,9 +85,9 @@ def print_jira_issue(issue):
     key = key_to_md(issue["key"])
     if "LP#" in summary:
         summary = insert_bug_link(summary)
-        print(" - {}".format(summary))
+        print("   - {}".format(summary))
     else:
-        print(" - {} : {}".format(key, summary))
+        print("   - {} : {}".format(key, summary))
 
 
 def print_jira_report(issues):
@@ -86,12 +95,12 @@ def print_jira_report(issues):
         return
 
     global sprint
-    category = ""
-    print("# {} report".format(sprint))
+    epic = ""
+
     for issue in issues:
-#        if issues[issue]["type"] != category:
-#            category = issues[issue]["type"]
-#            print("\n## {}".format(category))
+        if epic != issues[issue]["epic"]:
+            epic = issues[issue]["epic"]
+            print(" - {}".format(issues[issue]["epic"]))
         print_jira_issue(issues[issue])
 
 
@@ -119,11 +128,9 @@ def main(args=None):
     jira = JIRA(api.server, basic_auth=(api.login, api.token))
 
     sprint = opts.sprint
+       
     # Create a set of all Jira issues completed in a given sprint
     issues = find_issue_in_jira_sprint(jira, opts.project, sprint)
-    print("Found {} issue{} in JIRA".format(
-        len(issues),"s" if len(issues)> 1 else "")
-    )
 
     print_jira_report(issues)
 
