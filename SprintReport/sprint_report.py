@@ -46,7 +46,9 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
 
         # For each issue in JIRA with LP# in the title
         for issue in issues:
-            sprint_goal = issue.fields.customfield_10020[0].goal
+            for pulse in issue.fields.customfield_10020:
+                if pulse.name == sprint:
+                    sprint_goal = pulse.goal
             summary = issue.fields.summary
             issue_type = issue.fields.issuetype.name
             if hasattr(issue.fields, "parent"):
