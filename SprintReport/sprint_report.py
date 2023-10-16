@@ -130,7 +130,10 @@ def main(args=None):
     jira = JIRA(api.server, basic_auth=(api.login, api.token))
 
     sprint = opts.sprint
-       
+    
+    print("") # Insert blank line to avoid md format issue
+    print(sprint) # Insert blank line to avoid md format issue
+      
     # Create a set of all Jira issues completed in a given sprint
     issues = find_issue_in_jira_sprint(jira, opts.project, sprint)
 
