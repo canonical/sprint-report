@@ -34,7 +34,7 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
     while True:
         start_index = issue_index * issue_batch
         request = "project = {} " \
-            "AND sprint = \"{}\" " \
+            "AND cf[10020] = \"{}\" " \
             "AND status = Done ORDER BY type".format(project, sprint)
         issues = jira_api.search_issues(request, startAt=start_index)
 
