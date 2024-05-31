@@ -54,15 +54,18 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
             if hasattr(issue.fields, "parent"):
                 epic = jira_api.issue(issue.fields.parent.key)
                 epic_summary = epic.fields.summary
+                epic_status = str(epic.fields.status)
             else:
                 epic_summary = "Other"
+                epic_status = "Other"
             found_issues[issue.key]= {
                 "key":issue.key,
                 "type":issue_type,
                 "epic":epic_summary,
+                "epic_status":epic_status,
                 "summary":summary}
 
-    print("\nPulse Goal:\n{}\n\n---\nTasks:\n".format(sprint_goal))
+    print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
     return found_issues
 
 
@@ -96,13 +99,19 @@ def print_jira_report(issues):
     if not issues:
         return
 
-    global sprint
     epic = ""
-
+    print("---\nCompleted Epics:\n")
+    for issue in issues:
+        if epic != issues[issue]["epic"] and issues[issue]["epic_status"] == 'Done':
+            epic = issues[issue]["epic"]
+            print(" - {}".format(issues[issue]["epic"]))
+    
+    epic = ""
+    print("\n---\nCompleted Tasks:\n")
     for issue in issues:
         if epic != issues[issue]["epic"]:
             epic = issues[issue]["epic"]
-            print(" - {}".format(issues[issue]["epic"]))
+            print(" - {} {}".format(issues[issue]["epic"], issues[issue]["epic_status"]))
         print_jira_issue(issues[issue])
 
 
