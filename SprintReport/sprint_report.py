@@ -111,7 +111,7 @@ def print_jira_report(issues):
     for issue in issues:
         if epic != issues[issue]["epic"]:
             epic = issues[issue]["epic"]
-            print(" - {} {}".format(issues[issue]["epic"], issues[issue]["epic_status"]))
+            print(" - {} ".format(issues[issue]["epic"]))
         print_jira_issue(issues[issue])
 
 
