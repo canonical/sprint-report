@@ -56,8 +56,13 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
                 epic_summary = epic.fields.summary
                 epic_status = str(epic.fields.status)
             else:
+                epic = ""
                 epic_summary = "Other"
                 epic_status = "Other"
+
+            if epic:
+                epic_summary = "{} : {}".format(key_to_md(epic.key), epic_summary)
+
             found_issues[issue.key]= {
                 "key":issue.key,
                 "type":issue_type,
@@ -67,7 +72,6 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
 
     print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
     return found_issues
-
 
 def key_to_md(key):
     global jira_server
