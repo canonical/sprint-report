@@ -25,50 +25,39 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
     if not jira_api or not project:
         return {}
 
-    # Get JIRA issues in batch of 50
-    issue_index = 0
-    issue_batch = 50
-
     found_issues = {}
 
     sprint_goal = ""
-    while True:
-        start_index = issue_index * issue_batch
-        request = "project = {} " \
-            "AND sprint = \"{}\" " \
-            "AND status = Done AND issueType != Sub-task ORDER BY \'Epic Link\'".format(project, sprint)
-        issues = jira_api.search_issues(request, startAt=start_index)
+    request = "project = {} " \
+        "AND sprint = \"{}\" " \
+        "AND status = Done AND issueType != Sub-task ORDER BY \'Epic Link\'".format(project, sprint)
+    issues = jira_api.search_issues(request)
 
-        if not issues:
-            break
+    # For each issue in JIRA with LP# in the title
+    for issue in issues:
+        for pulse in issue.fields.customfield_10020:
+            if pulse.name == sprint:
+                sprint_goal = pulse.goal
+        summary = issue.fields.summary
+        issue_type = issue.fields.issuetype.name
+        if hasattr(issue.fields, "parent"):
+            epic = jira_api.issue(issue.fields.parent.key)
+            epic_summary = epic.fields.summary
+            epic_status = str(epic.fields.status)
+        else:
+            epic = ""
+            epic_summary = "Other"
+            epic_status = "Other"
 
-        issue_index += 1
+        if epic:
+            epic_summary = "{} : {}".format(key_to_md(epic.key), epic_summary)
 
-        # For each issue in JIRA with LP# in the title
-        for issue in issues:
-            for pulse in issue.fields.customfield_10020:
-                if pulse.name == sprint:
-                    sprint_goal = pulse.goal
-            summary = issue.fields.summary
-            issue_type = issue.fields.issuetype.name
-            if hasattr(issue.fields, "parent"):
-                epic = jira_api.issue(issue.fields.parent.key)
-                epic_summary = epic.fields.summary
-                epic_status = str(epic.fields.status)
-            else:
-                epic = ""
-                epic_summary = "Other"
-                epic_status = "Other"
-
-            if epic:
-                epic_summary = "{} : {}".format(key_to_md(epic.key), epic_summary)
-
-            found_issues[issue.key]= {
-                "key":issue.key,
-                "type":issue_type,
-                "epic":epic_summary,
-                "epic_status":epic_status,
-                "summary":summary}
+        found_issues[issue.key]= {
+            "key":issue.key,
+            "type":issue_type,
+            "epic":epic_summary,
+            "epic_status":epic_status,
+            "summary":summary}
 
     print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
     return found_issues
