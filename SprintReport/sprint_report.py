@@ -23,11 +23,18 @@ def get_bug_id(summary):
 
 def find_issue_in_jira_sprint(jira_api, project, sprint):
     if not jira_api or not project:
-        return {}
+        return {}, {}
 
     found_issues = {}
+    analytics = {
+        "total_issues": 0,
+        "completed_issues": 0,
+        "total_story_points": 0.0,
+        "completed_story_points": 0.0
+    }
 
     sprint_goal = ""
+    # First, get completed issues
     request = "project = {} " \
         "AND sprint = \"{}\" " \
         "AND status = Done AND issueType != Sub-task ORDER BY \'Epic Link\'".format(project, sprint)
@@ -59,8 +66,27 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
             "epic_status":epic_status,
             "summary":summary}
 
+    # Now get all issues in sprint for analytics
+    request_all = "project = {} " \
+        "AND sprint = \"{}\" " \
+        "AND issueType != Sub-task".format(project, sprint)
+    all_issues = jira_api.search_issues(request_all)
+    
+    analytics["total_issues"] = len(all_issues)
+    analytics["completed_issues"] = len(found_issues)
+    
+    # Calculate story points
+    for issue in all_issues:
+        # Story points are typically in customfield_10016, but can vary
+        story_points = getattr(issue.fields, 'customfield_10016', None)
+        if story_points:
+            analytics["total_story_points"] += float(story_points)
+            # Check if this issue is completed
+            if issue.key in found_issues:
+                analytics["completed_story_points"] += float(story_points)
+
     print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
-    return found_issues
+    return found_issues, analytics
 
 def key_to_md(key):
     global jira_server
@@ -108,6 +134,35 @@ def print_jira_report(issues):
         print_jira_issue(issues[issue])
 
 
+def print_analytics(analytics):
+    """Print sprint analytics showing completed vs total issues and story points"""
+    if not analytics:
+        return
+    
+    print("\n---\nSprint Analytics:\n")
+    
+    # Issues analytics
+    completed = analytics["completed_issues"]
+    total = analytics["total_issues"]
+    if total > 0:
+        percentage = (completed / total) * 100
+        print(f" - Issues: {completed}/{total} completed ({percentage:.1f}%)")
+    else:
+        print(f" - Issues: {completed}/{total} completed")
+    
+    # Story points analytics
+    completed_sp = analytics["completed_story_points"]
+    total_sp = analytics["total_story_points"]
+    if total_sp > 0:
+        percentage_sp = (completed_sp / total_sp) * 100
+        print(f" - Story Points: {completed_sp:.1f}/{total_sp:.1f} completed ({percentage_sp:.1f}%)")
+    elif completed_sp > 0:
+        print(f" - Story Points: {completed_sp:.1f} completed (total not available)")
+    else:
+        print(f" - Story Points: Not tracked or not available")
+    print("")
+
+
 def main(args=None):
     global jira_server
     global sprint
@@ -137,8 +192,9 @@ def main(args=None):
     print(sprint) # Insert blank line to avoid md format issue
       
     # Create a set of all Jira issues completed in a given sprint
-    issues = find_issue_in_jira_sprint(jira, opts.project, sprint)
+    issues, analytics = find_issue_in_jira_sprint(jira, opts.project, sprint)
 
     print_jira_report(issues)
+    print_analytics(analytics)
 
 # =============================================================================
