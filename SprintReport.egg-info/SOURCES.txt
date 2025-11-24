@@ -1,0 +1,16 @@
+LICENSE.txt
+README.md
+setup.cfg
+setup.py
+SprintReport/__init__.py
+SprintReport/jira_api.py
+SprintReport/obj_report.py
+SprintReport/sprint_report.py
+SprintReport.egg-info/PKG-INFO
+SprintReport.egg-info/SOURCES.txt
+SprintReport.egg-info/dependency_links.txt
+SprintReport.egg-info/entry_points.txt
+SprintReport.egg-info/requires.txt
+SprintReport.egg-info/top_level.txt
+tests/__init__.py
+tests/conftest.py

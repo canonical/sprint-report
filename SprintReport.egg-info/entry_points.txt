@@ -1,0 +1,3 @@
+[console_scripts]
+obj-report = SprintReport.obj_report:main
+sprint-report = SprintReport.sprint_report:main
