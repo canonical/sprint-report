@@ -17,6 +17,8 @@ If saved, this information will be persisted in ~/.jira.token
  - It will create markdown link for Jira Key
  - If a bug summary includes LP#<bug id> it will substitute it for a link to the
    Launchpad bug
+ - **Sprint Analytics**: Shows completed issues vs total issues in the sprint
+ - **Story Points Analytics**: Shows completed story points vs total story points
 
 Example:
 ```

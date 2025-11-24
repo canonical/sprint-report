@@ -75,6 +75,9 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
     analytics["total_issues"] = len(all_issues)
     analytics["completed_issues"] = len(found_issues)
     
+    # Create a set of completed issue keys for O(1) lookup
+    completed_keys = set(found_issues.keys())
+    
     # Calculate story points
     for issue in all_issues:
         # Story points are typically in customfield_10016, but can vary
@@ -82,7 +85,7 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
         if story_points:
             analytics["total_story_points"] += float(story_points)
             # Check if this issue is completed
-            if issue.key in found_issues:
+            if issue.key in completed_keys:
                 analytics["completed_story_points"] += float(story_points)
 
     print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
