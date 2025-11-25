@@ -81,7 +81,7 @@ def find_issue_in_jira_sprint(jira_api, project, sprint, analytics_only):
     # Calculate story points
     for issue in all_issues:
         # Story points are typically in customfield_10016, but can vary
-        story_points = getattr(issue.fields, 'customfield_10016', None)
+        story_points = getattr(issue.fields, 'customfield_10024', None)
         if story_points:
             analytics["total_story_points"] += float(story_points)
             # Check if this issue is completed
