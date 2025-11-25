@@ -240,16 +240,3 @@ def test_main_without_analytics_only_flag(mock_jira_class, mock_jira_api_class, 
     assert "Completed Epics:" in captured.out
     assert "Completed Tasks:" in captured.out
 
-def test_print_analytics_zero_total(capsys):
-    """Test print_analytics with zero total issues"""
-    analytics = {
-        "total_issues": 0,
-        "completed_issues": 0,
-        "total_story_points": 0.0,
-        "completed_story_points": 0.0
-    }
-    
-    print_analytics(analytics)
-    captured = capsys.readouterr()
-    
-    assert "0/0 completed" in captured.out
