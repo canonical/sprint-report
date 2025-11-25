@@ -21,7 +21,7 @@ def get_bug_id(summary):
     return id
 
 
-def find_issue_in_jira_sprint(jira_api, project, sprint):
+def find_issue_in_jira_sprint(jira_api, project, sprint, analytics_only):
     if not jira_api or not project:
         return {}, {}
 
@@ -88,7 +88,8 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
             if issue.key in completed_keys:
                 analytics["completed_story_points"] += float(story_points)
 
-    print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
+    if not analytics_only:
+        print("\nPulse Goal:\n{}\n\n".format(sprint_goal))
     return found_issues, analytics
 
 def key_to_md(key):
@@ -181,8 +182,8 @@ def main(args=None):
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument("--analytics-only", action="store_true",
                             help="print only sprint name and analytics (no detailed report)")
-    mode_group.add_argument("--report-only", action="store_true",
-                            help="print only detailed report (no analytics, original behavior)")
+    mode_group.add_argument("--full-report", action="store_true",
+                            help="print full report (analytics + report)")
 
     opts = parser.parse_args(args)
 
@@ -202,17 +203,17 @@ def main(args=None):
     print(sprint) # Insert blank line to avoid md format issue
       
     # Create a set of all Jira issues completed in a given sprint
-    issues, analytics = find_issue_in_jira_sprint(jira, opts.project, sprint)
+    issues, analytics = find_issue_in_jira_sprint(jira, opts.project, sprint, opts.analytics_only)
 
     if opts.analytics_only:
         # Mode 1: Print only analytics (sprint name already printed above)
         print_analytics(analytics)
-    elif opts.report_only:
-        # Mode 2: Print only detailed report (original behavior, no analytics)
-        print_jira_report(issues)
-    else:
-        # Mode 3: Print both report and analytics (default, "all" mode)
+    elif opts.full_report:
+        # Mode 2: Print both report and analytics (default, "all" mode)
         print_jira_report(issues)
         print_analytics(analytics)
+    else:
+        # Mode 3: Print only detailed report (original behavior, no analytics)
+        print_jira_report(issues)
 
 # =============================================================================
