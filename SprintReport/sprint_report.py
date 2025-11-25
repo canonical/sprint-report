@@ -176,6 +176,8 @@ def main(args=None):
 
     parser.add_argument("project", type=str, help="key of the Jira project")
     parser.add_argument("sprint", type=str, help="name of the Jira sprint")
+    parser.add_argument("--analytics-only", action="store_true",
+                        help="print only sprint name and analytics (no detailed report)")
 
     opts = parser.parse_args(args)
 
@@ -197,7 +199,12 @@ def main(args=None):
     # Create a set of all Jira issues completed in a given sprint
     issues, analytics = find_issue_in_jira_sprint(jira, opts.project, sprint)
 
-    print_jira_report(issues)
-    print_analytics(analytics)
+    if opts.analytics_only:
+        # Print only analytics (sprint name already printed above)
+        print_analytics(analytics)
+    else:
+        # Print full report with analytics (default behavior)
+        print_jira_report(issues)
+        print_analytics(analytics)
 
 # =============================================================================

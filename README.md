@@ -20,10 +20,21 @@ If saved, this information will be persisted in ~/.jira.token
  - **Sprint Analytics**: Shows completed issues vs total issues in the sprint
  - **Story Points Analytics**: Shows completed story points vs total story points
 
-Example:
+## Usage
+
+### Full Report (Default)
+Print both the detailed task report and analytics:
 ```
 $> sprint-report FR "2023 Pulse #1"
 ```
+
+### Analytics Only
+Print only sprint name and analytics (no detailed task breakdown):
+```
+$> sprint-report FR "2023 Pulse #1" --analytics-only
+```
+
+## Installation
 
 Before installing this tool, ensure that you have installed the Jira pip
 package:

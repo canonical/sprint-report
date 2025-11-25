@@ -6,6 +6,7 @@ from SprintReport.sprint_report import (
     get_bug_id,
     key_to_md,
     insert_bug_link,
+    main,
 )
 
 
@@ -132,6 +133,112 @@ def test_print_analytics_empty(capsys):
     captured = capsys.readouterr()
     assert captured.out == ""
 
+
+def test_print_analytics_zero_total(capsys):
+    """Test print_analytics with zero total issues"""
+    analytics = {
+        "total_issues": 0,
+        "completed_issues": 0,
+        "total_story_points": 0.0,
+        "completed_story_points": 0.0
+    }
+    
+    print_analytics(analytics)
+    captured = capsys.readouterr()
+    
+    assert "0/0 completed" in captured.out
+
+
+@patch('SprintReport.sprint_report.jira_api')
+@patch('SprintReport.sprint_report.JIRA')
+def test_main_with_analytics_only_flag(mock_jira_class, mock_jira_api_class, capsys, mock_issue):
+    """Test main function with --analytics-only flag"""
+    # Setup mocks
+    mock_api_instance = Mock()
+    mock_api_instance.server = "https://jira.example.com"
+    mock_api_instance.login = "test@example.com"
+    mock_api_instance.token = "test-token"
+    mock_jira_api_class.return_value = mock_api_instance
+    
+    mock_jira_instance = Mock()
+    mock_jira_class.return_value = mock_jira_instance
+    
+    # Setup mock issue
+    completed_issue = mock_issue
+    completed_issue.fields.customfield_10020 = [Mock(name="Sprint 1", goal="Test goal")]
+    if hasattr(completed_issue.fields, "parent"):
+        delattr(completed_issue.fields, "parent")
+    
+    all_issue = Mock()
+    all_issue.key = "TEST-124"
+    all_issue.fields = Mock()
+    all_issue.fields.customfield_10016 = 3.0
+    if hasattr(all_issue.fields, "parent"):
+        delattr(all_issue.fields, "parent")
+    
+    mock_jira_instance.search_issues = Mock(side_effect=[
+        [completed_issue],  # First call for completed issues
+        [completed_issue, all_issue]  # Second call for all issues
+    ])
+    
+    # Call main with --analytics-only flag
+    main(["TEST", "Sprint 1", "--analytics-only"])
+    captured = capsys.readouterr()
+    
+    # Should contain sprint name and analytics
+    assert "Sprint 1" in captured.out
+    assert "Sprint Analytics:" in captured.out
+    assert "Issues:" in captured.out
+    
+    # Should NOT contain detailed report sections
+    assert "Completed Epics:" not in captured.out
+    assert "Completed Tasks:" not in captured.out
+
+
+@patch('SprintReport.sprint_report.jira_api')
+@patch('SprintReport.sprint_report.JIRA')
+def test_main_without_analytics_only_flag(mock_jira_class, mock_jira_api_class, capsys, mock_issue):
+    """Test main function without --analytics-only flag (default behavior)"""
+    # Setup mocks
+    mock_api_instance = Mock()
+    mock_api_instance.server = "https://jira.example.com"
+    mock_api_instance.login = "test@example.com"
+    mock_api_instance.token = "test-token"
+    mock_jira_api_class.return_value = mock_api_instance
+    
+    mock_jira_instance = Mock()
+    mock_jira_class.return_value = mock_jira_instance
+    
+    # Setup mock issue
+    completed_issue = mock_issue
+    completed_issue.fields.customfield_10020 = [Mock(name="Sprint 1", goal="Test goal")]
+    if hasattr(completed_issue.fields, "parent"):
+        delattr(completed_issue.fields, "parent")
+    
+    all_issue = Mock()
+    all_issue.key = "TEST-124"
+    all_issue.fields = Mock()
+    all_issue.fields.customfield_10016 = 3.0
+    if hasattr(all_issue.fields, "parent"):
+        delattr(all_issue.fields, "parent")
+    
+    mock_jira_instance.search_issues = Mock(side_effect=[
+        [completed_issue],  # First call for completed issues
+        [completed_issue, all_issue]  # Second call for all issues
+    ])
+    
+    # Call main without --analytics-only flag
+    main(["TEST", "Sprint 1"])
+    captured = capsys.readouterr()
+    
+    # Should contain sprint name, detailed report, and analytics
+    assert "Sprint 1" in captured.out
+    assert "Sprint Analytics:" in captured.out
+    assert "Issues:" in captured.out
+    
+    # Should contain detailed report sections
+    assert "Completed Epics:" in captured.out
+    assert "Completed Tasks:" in captured.out
 
 def test_print_analytics_zero_total(capsys):
     """Test print_analytics with zero total issues"""
