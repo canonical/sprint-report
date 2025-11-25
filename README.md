@@ -22,10 +22,18 @@ If saved, this information will be persisted in ~/.jira.token
 
 ## Usage
 
-### Full Report (Default)
+The tool supports three output modes:
+
+### All (Default)
 Print both the detailed task report and analytics:
 ```
 $> sprint-report FR "2023 Pulse #1"
+```
+
+### Report Only
+Print only the detailed task report (original behavior, no analytics):
+```
+$> sprint-report FR "2023 Pulse #1" --report-only
 ```
 
 ### Analytics Only

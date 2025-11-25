@@ -176,8 +176,13 @@ def main(args=None):
 
     parser.add_argument("project", type=str, help="key of the Jira project")
     parser.add_argument("sprint", type=str, help="name of the Jira sprint")
-    parser.add_argument("--analytics-only", action="store_true",
-                        help="print only sprint name and analytics (no detailed report)")
+    
+    # Create mutually exclusive group for output modes
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--analytics-only", action="store_true",
+                            help="print only sprint name and analytics (no detailed report)")
+    mode_group.add_argument("--report-only", action="store_true",
+                            help="print only detailed report (no analytics, original behavior)")
 
     opts = parser.parse_args(args)
 
@@ -200,10 +205,13 @@ def main(args=None):
     issues, analytics = find_issue_in_jira_sprint(jira, opts.project, sprint)
 
     if opts.analytics_only:
-        # Print only analytics (sprint name already printed above)
+        # Mode 1: Print only analytics (sprint name already printed above)
         print_analytics(analytics)
+    elif opts.report_only:
+        # Mode 2: Print only detailed report (original behavior, no analytics)
+        print_jira_report(issues)
     else:
-        # Print full report with analytics (default behavior)
+        # Mode 3: Print both report and analytics (default, "all" mode)
         print_jira_report(issues)
         print_analytics(analytics)
 

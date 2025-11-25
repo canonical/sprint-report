@@ -197,8 +197,8 @@ def test_main_with_analytics_only_flag(mock_jira_class, mock_jira_api_class, cap
 
 @patch('SprintReport.sprint_report.jira_api')
 @patch('SprintReport.sprint_report.JIRA')
-def test_main_without_analytics_only_flag(mock_jira_class, mock_jira_api_class, capsys, mock_issue):
-    """Test main function without --analytics-only flag (default behavior)"""
+def test_main_default_mode_all(mock_jira_class, mock_jira_api_class, capsys, mock_issue):
+    """Test main function without any flags (default behavior - shows both report and analytics)"""
     # Setup mocks
     mock_api_instance = Mock()
     mock_api_instance.server = "https://jira.example.com"
@@ -227,7 +227,7 @@ def test_main_without_analytics_only_flag(mock_jira_class, mock_jira_api_class, 
         [completed_issue, all_issue]  # Second call for all issues
     ])
     
-    # Call main without --analytics-only flag
+    # Call main without any flags (default mode)
     main(["TEST", "Sprint 1"])
     captured = capsys.readouterr()
     
@@ -239,4 +239,51 @@ def test_main_without_analytics_only_flag(mock_jira_class, mock_jira_api_class, 
     # Should contain detailed report sections
     assert "Completed Epics:" in captured.out
     assert "Completed Tasks:" in captured.out
+
+
+@patch('SprintReport.sprint_report.jira_api')
+@patch('SprintReport.sprint_report.JIRA')
+def test_main_with_report_only_flag(mock_jira_class, mock_jira_api_class, capsys, mock_issue):
+    """Test main function with --report-only flag (original behavior - no analytics)"""
+    # Setup mocks
+    mock_api_instance = Mock()
+    mock_api_instance.server = "https://jira.example.com"
+    mock_api_instance.login = "test@example.com"
+    mock_api_instance.token = "test-token"
+    mock_jira_api_class.return_value = mock_api_instance
+    
+    mock_jira_instance = Mock()
+    mock_jira_class.return_value = mock_jira_instance
+    
+    # Setup mock issue
+    completed_issue = mock_issue
+    completed_issue.fields.customfield_10020 = [Mock(name="Sprint 1", goal="Test goal")]
+    if hasattr(completed_issue.fields, "parent"):
+        delattr(completed_issue.fields, "parent")
+    
+    all_issue = Mock()
+    all_issue.key = "TEST-124"
+    all_issue.fields = Mock()
+    all_issue.fields.customfield_10016 = 3.0
+    if hasattr(all_issue.fields, "parent"):
+        delattr(all_issue.fields, "parent")
+    
+    mock_jira_instance.search_issues = Mock(side_effect=[
+        [completed_issue],  # First call for completed issues
+        [completed_issue, all_issue]  # Second call for all issues
+    ])
+    
+    # Call main with --report-only flag
+    main(["TEST", "Sprint 1", "--report-only"])
+    captured = capsys.readouterr()
+    
+    # Should contain sprint name and detailed report
+    assert "Sprint 1" in captured.out
+    
+    # Should contain detailed report sections
+    assert "Completed Epics:" in captured.out
+    assert "Completed Tasks:" in captured.out
+    
+    # Should NOT contain analytics section
+    assert "Sprint Analytics:" not in captured.out
 
