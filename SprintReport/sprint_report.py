@@ -25,32 +25,22 @@ def find_issue_in_jira_sprint(jira_api, project, sprint):
     if not jira_api or not project:
         return {}
 
-    # Get JIRA issues in batch of 50
-    issue_index = 0
-    issue_batch = 50
-
     found_issues = {}
 
-    while True:
-        start_index = issue_index * issue_batch
-        request = "project = {} " \
-            "AND sprint = \"{}\" " \
-            "AND status = Done ORDER BY type".format(project, sprint)
-        issues = jira_api.search_issues(request, startAt=start_index)
+    request = "project = {} " \
+        "AND sprint = \"{}\" " \
+        "AND status = Done ORDER BY type".format(project, sprint)
 
-        if not issues:
-            break
+    issues = jira_api.enhanced_search_issues(jql_str = request)
 
-        issue_index += 1
-
-        # For each issue in JIRA with LP# in the title
-        for issue in issues:
-            summary = issue.fields.summary
-            issue_type = issue.fields.issuetype.name
-            found_issues[issue.key]= {
-                "key":issue.key,
-                "type":issue_type,
-                "summary":summary}
+    # For each issue in JIRA with LP# in the title
+    for issue in issues:
+        summary = issue.fields.summary
+        issue_type = issue.fields.issuetype.name
+        found_issues[issue.key]= {
+            "key":issue.key,
+            "type":issue_type,
+            "summary":summary}
 
     return found_issues
 
